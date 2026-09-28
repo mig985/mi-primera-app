@@ -6,8 +6,7 @@
 
   <title>Mi primera App</title>
 
-  <link rel="manifest" href="manifest.json">
-
+  <link rel="manifest" href="./manifest.json">
   <meta name="theme-color" content="#1976d2">
 
   <style>
@@ -53,9 +52,25 @@
       cursor: pointer;
     }
 
+    button:disabled {
+      opacity: 0.6;
+    }
+
+    #estado {
+      margin-top: 15px;
+      font-size: 14px;
+    }
+
     .tarea {
-      padding: 10px 0;
+      padding: 12px 0;
       border-bottom: 1px solid #ddd;
+    }
+
+    .fecha {
+      display: block;
+      margin-top: 4px;
+      color: #777;
+      font-size: 12px;
     }
   </style>
 </head>
@@ -75,9 +90,11 @@
       placeholder="Ej.: Revisar estudio de flujo"
     >
 
-    <button onclick="agregarTarea()">
+    <button id="botonGuardar" onclick="guardarTarea()">
       Guardar
     </button>
+
+    <div id="estado"></div>
 
     <div id="lista"></div>
 
@@ -85,24 +102,121 @@
 </div>
 
 <script>
-  function agregarTarea() {
-    const input = document.getElementById("tarea");
-    const texto = input.value.trim();
 
-    if (!texto) return;
+const API_URL =
+  "https://script.google.com/macros/s/AKfycbz67nzkJ2fJ1DqQfn4LpS5-kFzJUjXxwiytHrzRhEGNMrsQeFJtrnaayHUfhSE7NivB/exec";
 
-    const elemento = document.createElement("div");
-    elemento.className = "tarea";
-    elemento.textContent = "✓ " + texto;
 
-    document.getElementById("lista").appendChild(elemento);
+async function cargarTareas() {
+
+  const estado = document.getElementById("estado");
+
+  estado.textContent = "Cargando tareas...";
+
+  try {
+
+    const respuesta = await fetch(API_URL);
+
+    const datos = await respuesta.json();
+
+    const lista = document.getElementById("lista");
+
+    lista.innerHTML = "";
+
+    datos.tareas.forEach(tarea => {
+
+      const elemento = document.createElement("div");
+
+      elemento.className = "tarea";
+
+      let fecha = "";
+
+      if (tarea.fecha) {
+        fecha = new Date(tarea.fecha).toLocaleString("es-AR");
+      }
+
+      elemento.innerHTML = `
+        ✓ ${tarea.tarea}
+        <span class="fecha">${fecha}</span>
+      `;
+
+      lista.appendChild(elemento);
+
+    });
+
+    estado.textContent =
+      datos.tareas.length + " tarea(s) guardada(s)";
+
+  } catch (error) {
+
+    console.error(error);
+
+    estado.textContent =
+      "Error al cargar las tareas.";
+
+  }
+}
+
+
+async function guardarTarea() {
+
+  const input = document.getElementById("tarea");
+
+  const boton =
+    document.getElementById("botonGuardar");
+
+  const estado =
+    document.getElementById("estado");
+
+  const texto = input.value.trim();
+
+  if (!texto) return;
+
+  boton.disabled = true;
+
+  estado.textContent = "Guardando...";
+
+  try {
+
+    await fetch(API_URL, {
+
+      method: "POST",
+
+      body: JSON.stringify({
+        tarea: texto
+      })
+
+    });
 
     input.value = "";
+
+    estado.textContent = "Tarea guardada.";
+
+    await cargarTareas();
+
+  } catch (error) {
+
+    console.error(error);
+
+    estado.textContent =
+      "Error al guardar la tarea.";
+
   }
 
-  if ("serviceWorker" in navigator) {
-    navigator.serviceWorker.register("sw.js");
-  }
+  boton.disabled = false;
+
+}
+
+
+cargarTareas();
+
+
+if ("serviceWorker" in navigator) {
+
+  navigator.serviceWorker.register("./sw.js");
+
+}
+
 </script>
 
 </body>
