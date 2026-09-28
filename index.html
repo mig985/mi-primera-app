@@ -11,11 +11,9 @@
 
   <title>Mi primera App</title>
 
-  <!-- Configuración PWA -->
   <link rel="manifest" href="./manifest.json">
 
   <meta name="theme-color" content="#1976d2">
-
 
   <style>
 
@@ -25,13 +23,11 @@
       background: #f3f5f7;
     }
 
-
     .contenedor {
       max-width: 500px;
       margin: 40px auto;
       padding: 20px;
     }
-
 
     .tarjeta {
       background: white;
@@ -40,25 +36,34 @@
       box-shadow: 0 4px 15px rgba(0,0,0,0.12);
     }
 
-
     h1 {
       margin-top: 0;
       margin-bottom: 18px;
     }
 
-
-    /* VERSIÓN DE LA APLICACIÓN */
-
     .version {
       display: inline-block;
       background: #eeeeee;
-      color: #666666;
+      color: #666;
       font-size: 12px;
       padding: 5px 9px;
       border-radius: 6px;
-      margin-bottom: 22px;
+      margin-bottom: 12px;
     }
 
+    .conexion {
+      font-size: 13px;
+      margin-bottom: 22px;
+      font-weight: bold;
+    }
+
+    .online {
+      color: #16833b;
+    }
+
+    .offline {
+      color: #d17a00;
+    }
 
     input {
       width: 100%;
@@ -66,10 +71,9 @@
       padding: 14px;
       font-size: 16px;
       margin-bottom: 12px;
-      border: 1px solid #aaaaaa;
+      border: 1px solid #aaa;
       border-radius: 8px;
     }
-
 
     button {
       width: 100%;
@@ -80,129 +84,304 @@
       cursor: pointer;
     }
 
-
     button:disabled {
       opacity: 0.6;
     }
-
 
     #estado {
       margin-top: 15px;
       margin-bottom: 10px;
       font-size: 14px;
-      color: #555555;
+      color: #555;
     }
-
 
     .tarea {
       padding: 12px 0;
-      border-bottom: 1px solid #dddddd;
+      border-bottom: 1px solid #ddd;
     }
-
 
     .fecha {
       display: block;
       margin-top: 4px;
-      color: #777777;
+      color: #777;
+      font-size: 12px;
+    }
+
+    .pendiente {
+      display: inline-block;
+      margin-top: 6px;
+      padding: 3px 7px;
+      border-radius: 5px;
+      background: #fff3cd;
+      color: #856404;
       font-size: 12px;
     }
 
   </style>
-
 </head>
-
 
 <body>
 
+<div class="contenedor">
 
-  <div class="contenedor">
+  <div class="tarjeta">
 
-    <div class="tarjeta">
+    <h1>Mi primera App</h1>
 
-
-      <h1>Mi primera App</h1>
-
-
-      <!-- VERSIÓN VISIBLE -->
-
-      <div class="version">
-        Versión 1.1.0
-      </div>
-
-
-      <p>Agregar una tarea:</p>
-
-
-      <input
-        id="tarea"
-        type="text"
-        placeholder="Ej.: Revisar estudio de flujo"
-      >
-
-
-      <button
-        id="botonGuardar"
-        onclick="guardarTarea()"
-      >
-        Guardar
-      </button>
-
-
-      <div id="estado"></div>
-
-
-      <div id="lista"></div>
-
-
+    <div class="version">
+      Versión 1.2.0
     </div>
+
+    <div
+      id="conexion"
+      class="conexion">
+    </div>
+
+    <p>Agregar una tarea:</p>
+
+    <input
+      id="tarea"
+      type="text"
+      placeholder="Ej.: Revisar estudio de flujo"
+    >
+
+    <button
+      id="botonGuardar"
+      onclick="guardarTarea()">
+      Guardar
+    </button>
+
+    <div id="estado"></div>
+
+    <div id="lista"></div>
 
   </div>
 
+</div>
 
 
 <script>
 
-
-/* =====================================================
-   CONFIGURACIÓN
-   ===================================================== */
-
-
-const VERSION_APP = "1.1.0";
-
+const VERSION_APP = "1.2.0";
 
 const API_URL =
-  "https://script.google.com/macros/s/AKfycbz67nzkJ2fJ1DqQfn4LpS5-kFzJUjXxwiytHrzRhEGNMrsQeFJtrnaayHUfhSE7NivB/exec";
+"https://script.google.com/macros/s/AKfycbz67nzkJ2fJ1DqQfn4LpS5-kFzJUjXxwiytHrzRhEGNMrsQeFJtrnaayHUfhSE7NivB/exec";
 
 
+/* ================================
+   DATOS LOCALES
+================================ */
 
-/* =====================================================
-   CARGAR TAREAS DESDE GOOGLE SHEETS
-   ===================================================== */
+function obtenerTareasLocales() {
 
+  return JSON.parse(
+    localStorage.getItem("tareasCache") || "[]"
+  );
+
+}
+
+
+function guardarTareasLocales(tareas) {
+
+  localStorage.setItem(
+    "tareasCache",
+    JSON.stringify(tareas)
+  );
+
+}
+
+
+function obtenerPendientes() {
+
+  return JSON.parse(
+    localStorage.getItem("tareasPendientes") || "[]"
+  );
+
+}
+
+
+function guardarPendientes(tareas) {
+
+  localStorage.setItem(
+    "tareasPendientes",
+    JSON.stringify(tareas)
+  );
+
+}
+
+
+/* ================================
+   ESTADO DE CONEXIÓN
+================================ */
+
+function mostrarConexion() {
+
+  const elemento =
+    document.getElementById("conexion");
+
+  if (navigator.onLine) {
+
+    elemento.textContent =
+      "● Con conexión";
+
+    elemento.className =
+      "conexion online";
+
+  }
+
+  else {
+
+    elemento.textContent =
+      "● Sin conexión";
+
+    elemento.className =
+      "conexion offline";
+
+  }
+
+}
+
+
+/* ================================
+   MOSTRAR TAREAS
+================================ */
+
+function mostrarTareas(tareas) {
+
+  const lista =
+    document.getElementById("lista");
+
+  lista.innerHTML = "";
+
+
+  tareas.forEach(tarea => {
+
+    const elemento =
+      document.createElement("div");
+
+    elemento.className =
+      "tarea";
+
+
+    let fecha = "";
+
+    if (tarea.fecha) {
+
+      fecha =
+        new Date(tarea.fecha)
+        .toLocaleString("es-AR");
+
+    }
+
+
+    elemento.innerHTML = `
+      ✓ ${escaparHTML(tarea.tarea)}
+
+      <span class="fecha">
+        ${fecha}
+      </span>
+    `;
+
+
+    lista.appendChild(elemento);
+
+  });
+
+
+  const pendientes =
+    obtenerPendientes();
+
+
+  pendientes.forEach(tarea => {
+
+    const elemento =
+      document.createElement("div");
+
+    elemento.className =
+      "tarea";
+
+
+    elemento.innerHTML = `
+      ✓ ${escaparHTML(tarea.tarea)}
+
+      <span class="fecha">
+        ${new Date(tarea.fecha)
+          .toLocaleString("es-AR")}
+      </span>
+
+      <span class="pendiente">
+        Pendiente de sincronización
+      </span>
+    `;
+
+
+    lista.appendChild(elemento);
+
+  });
+
+}
+
+
+/* ================================
+   SEGURIDAD DEL TEXTO
+================================ */
+
+function escaparHTML(texto) {
+
+  const div =
+    document.createElement("div");
+
+  div.textContent = texto;
+
+  return div.innerHTML;
+
+}
+
+
+/* ================================
+   DESCARGAR GOOGLE SHEETS
+================================ */
 
 async function cargarTareas() {
-
 
   const estado =
     document.getElementById("estado");
 
 
+  if (!navigator.onLine) {
+
+    const locales =
+      obtenerTareasLocales();
+
+    mostrarTareas(locales);
+
+    estado.textContent =
+      "Mostrando datos guardados en el celular.";
+
+    return;
+
+  }
+
+
   estado.textContent =
-    "Cargando tareas...";
+    "Actualizando tareas...";
 
 
   try {
 
-
     const respuesta =
-      await fetch(API_URL);
+      await fetch(
+        API_URL + "?t=" + Date.now(),
+        {
+          cache: "no-store"
+        }
+      );
 
 
     if (!respuesta.ok) {
 
       throw new Error(
-        "Error HTTP: " + respuesta.status
+        "HTTP " + respuesta.status
       );
 
     }
@@ -212,138 +391,183 @@ async function cargarTareas() {
       await respuesta.json();
 
 
-    const lista =
-      document.getElementById("lista");
+    guardarTareasLocales(
+      datos.tareas
+    );
 
 
-    lista.innerHTML = "";
-
-
-    datos.tareas.forEach(tarea => {
-
-
-      const elemento =
-        document.createElement("div");
-
-
-      elemento.className =
-        "tarea";
-
-
-      let fecha = "";
-
-
-      if (tarea.fecha) {
-
-        fecha =
-          new Date(
-            tarea.fecha
-          ).toLocaleString(
-            "es-AR"
-          );
-
-      }
-
-
-      elemento.innerHTML = `
-        ✓ ${tarea.tarea}
-        <span class="fecha">
-          ${fecha}
-        </span>
-      `;
-
-
-      lista.appendChild(
-        elemento
-      );
-
-
-    });
+    mostrarTareas(
+      datos.tareas
+    );
 
 
     estado.textContent =
       datos.tareas.length +
-      " tarea(s) guardada(s)";
+      " tarea(s) sincronizada(s)";
 
 
   }
 
   catch (error) {
 
-
     console.error(error);
 
 
-    estado.textContent =
-      "Error al cargar las tareas.";
+    const locales =
+      obtenerTareasLocales();
 
+
+    mostrarTareas(locales);
+
+
+    estado.textContent =
+      "No se pudo conectar. Mostrando copia local.";
 
   }
 
 }
 
 
-
-/* =====================================================
-   GUARDAR TAREA EN GOOGLE SHEETS
-   ===================================================== */
-
+/* ================================
+   GUARDAR
+================================ */
 
 async function guardarTarea() {
 
-
   const input =
-    document.getElementById(
-      "tarea"
-    );
-
-
-  const boton =
-    document.getElementById(
-      "botonGuardar"
-    );
-
-
-  const estado =
-    document.getElementById(
-      "estado"
-    );
-
+    document.getElementById("tarea");
 
   const texto =
     input.value.trim();
 
 
-  if (!texto) {
+  if (!texto) return;
+
+
+  input.value = "";
+
+
+  /*
+    SI NO HAY INTERNET
+  */
+
+  if (!navigator.onLine) {
+
+    const pendientes =
+      obtenerPendientes();
+
+
+    pendientes.push({
+
+      idLocal:
+        crypto.randomUUID
+          ? crypto.randomUUID()
+          : Date.now().toString(),
+
+      tarea: texto,
+
+      fecha:
+        new Date().toISOString()
+
+    });
+
+
+    guardarPendientes(
+      pendientes
+    );
+
+
+    mostrarTareas(
+      obtenerTareasLocales()
+    );
+
+
+    document
+      .getElementById("estado")
+      .textContent =
+      "Guardada en el celular. Se sincronizará cuando vuelva Internet.";
+
 
     return;
 
   }
 
 
-  boton.disabled = true;
+  /*
+    SI HAY INTERNET
+  */
+
+  const guardado =
+    await enviarTarea(texto);
 
 
-  estado.textContent =
-    "Guardando...";
+  if (guardado) {
 
+    await cargarTareas();
+
+  }
+
+  else {
+
+    /*
+      Puede figurar online pero fallar
+      realmente la conexión.
+    */
+
+    const pendientes =
+      obtenerPendientes();
+
+
+    pendientes.push({
+
+      idLocal:
+        Date.now().toString(),
+
+      tarea: texto,
+
+      fecha:
+        new Date().toISOString()
+
+    });
+
+
+    guardarPendientes(
+      pendientes
+    );
+
+
+    mostrarTareas(
+      obtenerTareasLocales()
+    );
+
+
+    document
+      .getElementById("estado")
+      .textContent =
+      "Sin conexión con el servidor. Tarea guardada localmente.";
+
+  }
+
+}
+
+
+/* ================================
+   ENVIAR UNA TAREA
+================================ */
+
+async function enviarTarea(texto) {
 
   try {
-
 
     const respuesta =
       await fetch(
         API_URL,
         {
-
           method: "POST",
 
           body: JSON.stringify({
-
             tarea: texto
-
           })
-
         }
       );
 
@@ -351,87 +575,189 @@ async function guardarTarea() {
     if (!respuesta.ok) {
 
       throw new Error(
-        "Error HTTP: " +
-        respuesta.status
+        "HTTP " + respuesta.status
       );
 
     }
 
 
-    input.value = "";
-
-
-    estado.textContent =
-      "Tarea guardada.";
-
-
-    await cargarTareas();
-
+    return true;
 
   }
 
   catch (error) {
 
-
     console.error(error);
 
+    return false;
 
-    estado.textContent =
-      "Error al guardar la tarea.";
+  }
 
+}
+
+
+/* ================================
+   SINCRONIZAR PENDIENTES
+================================ */
+
+async function sincronizarPendientes() {
+
+  if (!navigator.onLine) {
+
+    return;
 
   }
 
 
-  boton.disabled = false;
+  let pendientes =
+    obtenerPendientes();
 
+
+  if (pendientes.length === 0) {
+
+    return;
+
+  }
+
+
+  const estado =
+    document.getElementById("estado");
+
+
+  estado.textContent =
+    "Sincronizando tareas pendientes...";
+
+
+  const restantes = [];
+
+
+  for (const tarea of pendientes) {
+
+    const ok =
+      await enviarTarea(
+        tarea.tarea
+      );
+
+
+    if (!ok) {
+
+      restantes.push(
+        tarea
+      );
+
+    }
+
+  }
+
+
+  guardarPendientes(
+    restantes
+  );
+
+
+  if (restantes.length === 0) {
+
+    estado.textContent =
+      "Sincronización completada.";
+
+  }
+
+  else {
+
+    estado.textContent =
+      restantes.length +
+      " tarea(s) todavía pendiente(s).";
+
+  }
+
+
+  await cargarTareas();
 
 }
 
 
+/* ================================
+   EVENTOS DE CONEXIÓN
+================================ */
 
-/* =====================================================
-   INICIO DE LA APLICACIÓN
-   ===================================================== */
+window.addEventListener(
+  "online",
+  async () => {
+
+    mostrarConexion();
+
+    await sincronizarPendientes();
+
+    await cargarTareas();
+
+  }
+);
 
 
-cargarTareas();
+window.addEventListener(
+  "offline",
+  () => {
+
+    mostrarConexion();
+
+    mostrarTareas(
+      obtenerTareasLocales()
+    );
+
+    document
+      .getElementById("estado")
+      .textContent =
+      "Modo sin conexión.";
+
+  }
+);
 
 
-
-/* =====================================================
+/* ================================
    SERVICE WORKER
-   ===================================================== */
-
+================================ */
 
 if ("serviceWorker" in navigator) {
 
-
   navigator.serviceWorker
-    .register("./sw.js")
-    .then(() => {
-
-      console.log(
-        "Service Worker registrado - v" +
-        VERSION_APP
-      );
-
-    })
-    .catch(error => {
-
-      console.error(
-        "Error Service Worker:",
-        error
-      );
-
-    });
-
+    .register("./sw.js");
 
 }
 
 
-</script>
+/* ================================
+   INICIO
+================================ */
 
+async function iniciar() {
+
+  mostrarConexion();
+
+  /*
+    Primero mostramos inmediatamente
+    lo que haya guardado localmente.
+  */
+
+  mostrarTareas(
+    obtenerTareasLocales()
+  );
+
+
+  if (navigator.onLine) {
+
+    await sincronizarPendientes();
+
+  }
+
+
+  await cargarTareas();
+
+}
+
+
+iniciar();
+
+</script>
 
 </body>
 
