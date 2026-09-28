@@ -1,4 +1,4 @@
-const CACHE_NAME = "mi-primera-app-v2";
+const CACHE_NAME = "mi-primera-app-v3";
 
 const ARCHIVOS = [
   "./",
