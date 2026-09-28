@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Mi primera App</title>
+
+  <link rel="manifest" href="manifest.json">
+
+  <meta name="theme-color" content="#1976d2">
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      background: #f3f5f7;
+    }
+
+    .contenedor {
+      max-width: 500px;
+      margin: 40px auto;
+      padding: 20px;
+    }
+
+    .tarjeta {
+      background: white;
+      padding: 25px;
+      border-radius: 18px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.12);
+    }
+
+    h1 {
+      margin-top: 0;
+    }
+
+    input {
+      width: 100%;
+      box-sizing: border-box;
+      padding: 14px;
+      font-size: 16px;
+      margin-bottom: 12px;
+      border: 1px solid #aaa;
+      border-radius: 8px;
+    }
+
+    button {
+      width: 100%;
+      padding: 14px;
+      font-size: 16px;
+      border: 0;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+
+    .tarea {
+      padding: 10px 0;
+      border-bottom: 1px solid #ddd;
+    }
+  </style>
+</head>
+
+<body>
+
+<div class="contenedor">
+  <div class="tarjeta">
+
+    <h1>Mi primera App</h1>
+
+    <p>Agregar una tarea:</p>
+
+    <input
+      id="tarea"
+      type="text"
+      placeholder="Ej.: Revisar estudio de flujo"
+    >
+
+    <button onclick="agregarTarea()">
+      Guardar
+    </button>
+
+    <div id="lista"></div>
+
+  </div>
+</div>
+
+<script>
+  function agregarTarea() {
+    const input = document.getElementById("tarea");
+    const texto = input.value.trim();
+
+    if (!texto) return;
+
+    const elemento = document.createElement("div");
+    elemento.className = "tarea";
+    elemento.textContent = "✓ " + texto;
+
+    document.getElementById("lista").appendChild(elemento);
+
+    input.value = "";
+  }
+
+  if ("serviceWorker" in navigator) {
+    navigator.serviceWorker.register("sw.js");
+  }
+</script>
+
+</body>
+</html>
